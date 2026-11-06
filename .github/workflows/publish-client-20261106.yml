@@ -3,6 +3,8 @@ on:
   push:
     paths:
       - .github/workflows/publish-client-20261106.yml
+permissions:
+  contents: write
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -18,12 +20,13 @@ jobs:
           git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
           git fetch --depth=2 origin main
           git checkout -B main FETCH_HEAD
-          test "$(git rev-parse HEAD^)" = e9392cda75fa30cc3ff0cf48456f9f66986fd529
+          test "$(git rev-parse HEAD^)" = 4b9adc66ed49a45ee989df865ffa69552e4ea076
           curl --fail --location --retry 3 --max-time 600 https://installation-obituaries-polyester-birth.trycloudflare.com/site.zip -o "$RUNNER_TEMP/site.zip"
           echo "50b812a5ef4ac4b0b241a3459aeefb67b9c5d4c0250636a2a081f05385def009  $RUNNER_TEMP/site.zip" | sha256sum --check
           unzip -q -o "$RUNNER_TEMP/site.zip" -d .
-          rm .github/workflows/publish-client-20261106.yml
           git add --all
+          git update-index --force-remove .github/workflows/publish-client-20261106.yml
           test "$(git write-tree)" = 0e0cb9f40f3403a2832483a79566a8d4967cdb8c
+          git add .github/workflows/publish-client-20261106.yml
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "Publish updated catalog, UZI design, founder photos and awards, course Instagram"
           git push origin HEAD:main

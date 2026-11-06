@@ -1,0 +1,29 @@
+name: Publish verified public client
+on:
+  push:
+    paths:
+      - .github/workflows/publish-client-20261106.yml
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Fetch and verify public site archive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git init .
+          git remote add origin https://github.com/zholshybaimagzhan05-lgtm/qazaq-clinic-pages.git
+          git config --local http.https://github.com/.extraheader "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          git fetch --depth=2 origin main
+          git checkout -B main FETCH_HEAD
+          test "$(git rev-parse HEAD^)" = e9392cda75fa30cc3ff0cf48456f9f66986fd529
+          curl --fail --location --retry 3 --max-time 600 https://installation-obituaries-polyester-birth.trycloudflare.com/site.zip -o "$RUNNER_TEMP/site.zip"
+          echo "50b812a5ef4ac4b0b241a3459aeefb67b9c5d4c0250636a2a081f05385def009  $RUNNER_TEMP/site.zip" | sha256sum --check
+          unzip -q -o "$RUNNER_TEMP/site.zip" -d .
+          rm .github/workflows/publish-client-20261106.yml
+          git add --all
+          test "$(git write-tree)" = 0e0cb9f40f3403a2832483a79566a8d4967cdb8c
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m "Publish updated catalog, UZI design, founder photos and awards, course Instagram"
+          git push origin HEAD:main
